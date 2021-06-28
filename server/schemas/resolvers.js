@@ -1,4 +1,4 @@
-const { User, BookInput } = require('../models');
+const { User, Book } = require('../models');
 
 const { AuthenticationError } = require('apollo-server-express');
 
@@ -42,32 +42,42 @@ const resolvers = {
          const token = signToken(user);
          return { token, user };
       },
-      saveBook: async (parent, { book }, context) => {
-         if (context.user) {
-            const addBook = await User.findByIdAndUpdate(
-               { _id: context.user._id },
-               { $addToSet: { savedBooks: book } },
-               { new: true }
-            );
+      saveBook: async (parent, args, context) => {
 
-            return addBook;
+         if (context.user) {
+
+           console.log(context.user);
+           console.log(args);
+           const updatedUser = await User.findByIdAndUpdate(
+
+             { _id: context.user._id },
+             { $addToSet: { savedBooks: args.input } },
+             { new: true }
+
+           );
+
+           return updatedUser;
          }
 
-         throw new AuthenticationError('You need to be logged in!');
-      },
-      removeBook: async (parent, { bookId }, context) => {
-         if (context.user) {
-            const removeBook = await User.findByIdAndUpdate(
-               { _id: context.user._id },
-               { $pull: { savedBooks: { bookId: bookId } } },
-               { new: true }
-            );
-            
-            return removeBook;
-         }
+         throw new AuthenticationError("Please log in!");
+       },
+       removeBook: async (parent, args, context) => {
 
-         throw new AuthenticationError('You need to be logged in!');
-      }
+         if (context.user) {
+
+           const updatedUser = await User.findOneAndUpdate(
+
+             { _id: context.user._id },
+             { $pull: { savedBooks: { bookId: args.bookId } } },
+             { new: true }
+
+           );
+
+           return updatedUser;
+         }
+         
+         throw new AuthenticationError("Please log in!");
+       },
    }
 };
 
